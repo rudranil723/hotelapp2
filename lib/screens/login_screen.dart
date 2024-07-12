@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'calender.dart';
 
 class LoginScreen extends StatelessWidget {
   @override
@@ -96,7 +97,11 @@ class LoginScreen extends StatelessWidget {
                     SizedBox(height: 34),
                     ElevatedButton(
                       onPressed: () {
-                        // Implement your login logic here
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                              builder: (context) => CalendarScreen()),
+                        );
                       },
                       child: Text('Login'),
                       style: ElevatedButton.styleFrom(
