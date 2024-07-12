@@ -12,9 +12,10 @@ class MyApp extends StatelessWidget {
       title: 'Hotel Booking App',
       theme: ThemeData(
         primarySwatch: Colors.blue,
+        fontFamily: 'Lato',
       ),
       home: HomeScreen(),
-      debugShowCheckedModeBanner: false, // This removes the debug banner
+      debugShowCheckedModeBanner: false,
     );
   }
 }

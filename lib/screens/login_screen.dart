@@ -27,14 +27,14 @@ class LoginScreen extends StatelessWidget {
               'WELCOME',
               style: TextStyle(
                 color: Colors.white,
-                fontSize: 34,
+                fontSize: 40,
                 fontWeight: FontWeight.bold,
               ),
             ),
           ),
           // 'Sign in to continue' text
           Positioned(
-            top: MediaQuery.of(context).size.height * 0.25,
+            top: MediaQuery.of(context).size.height * 0.30,
             left: 16.0,
             child: Text(
               'Sign in to continue',
@@ -47,7 +47,7 @@ class LoginScreen extends StatelessWidget {
           ),
           // White box with email and password fields
           Positioned(
-            top: MediaQuery.of(context).size.height * 0.50,
+            top: MediaQuery.of(context).size.height * 0.60,
             left: 0,
             right: 0,
             bottom: 0,
@@ -55,7 +55,7 @@ class LoginScreen extends StatelessWidget {
               decoration: BoxDecoration(
                 color: Colors.white,
               ),
-              child: Padding(
+              child: SingleChildScrollView(
                 padding: const EdgeInsets.all(24.0),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -81,6 +81,12 @@ class LoginScreen extends StatelessWidget {
                           color: Color.fromRGBO(24, 54, 65, 1),
                         ),
                         border: OutlineInputBorder(),
+                        suffixIcon: IconButton(
+                          icon: Icon(Icons.visibility_off),
+                          onPressed: () {
+                            // Implement toggle password visibility
+                          },
+                        ),
                       ),
                       obscureText: true,
                       style: TextStyle(
@@ -106,7 +112,7 @@ class LoginScreen extends StatelessWidget {
                         ),
                       ),
                     ),
-                    Spacer(),
+                    SizedBox(height: 20),
                     Align(
                       alignment: Alignment.bottomRight,
                       child: TextButton(
