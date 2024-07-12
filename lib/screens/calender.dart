@@ -66,7 +66,7 @@ class _CalendarScreenState extends State<CalendarScreen> {
                 top: MediaQuery.of(context).size.height * 0.50,
                 left: MediaQuery.of(context).size.width * 0.05,
                 right: MediaQuery.of(context).size.width * 0.05,
-                bottom: MediaQuery.of(context).size.height * 0.05,
+                bottom: MediaQuery.of(context).size.height * 0.07,
               ),
               padding: EdgeInsets.all(16.0),
               decoration: BoxDecoration(

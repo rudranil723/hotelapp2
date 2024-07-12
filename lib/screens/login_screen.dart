@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'home_screen.dart';
 import 'calender.dart';
 
 class LoginScreen extends StatelessWidget {
@@ -18,6 +19,17 @@ class LoginScreen extends StatelessWidget {
           Positioned.fill(
             child: Container(
               color: Colors.black.withOpacity(0.7),
+            ),
+          ),
+          // Back button
+          Positioned(
+            top: 40,
+            left: 16,
+            child: IconButton(
+              icon: Icon(Icons.arrow_back, color: Colors.white),
+              onPressed: () {
+                Navigator.pop(context);
+              },
             ),
           ),
           // 'Welcome' text
