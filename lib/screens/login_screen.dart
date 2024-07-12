@@ -38,7 +38,7 @@ class LoginScreen extends StatelessWidget {
             top: MediaQuery.of(context).size.height * 0.30,
             left: 16.0,
             child: Text(
-              'Sign in to continue',
+              'Log in to continue',
               style: TextStyle(
                 color: Colors.white,
                 fontSize: 34,
@@ -103,7 +103,7 @@ class LoginScreen extends StatelessWidget {
                               builder: (context) => CalendarScreen()),
                         );
                       },
-                      child: Text('Login'),
+                      child: Text('Log in'),
                       style: ElevatedButton.styleFrom(
                         backgroundColor: Colors.white,
                         foregroundColor: Color.fromRGBO(24, 54, 65, 1),

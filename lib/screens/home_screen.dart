@@ -94,7 +94,7 @@ class _HomeScreenState extends State<HomeScreen> {
                       ),
                       child: Center(
                         child: Text(
-                          'Login',
+                          'Log in',
                           style: TextStyle(
                             color: Color.fromRGBO(24, 54, 65, 1),
                             fontSize: 18,
