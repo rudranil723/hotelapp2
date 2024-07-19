@@ -1,8 +1,58 @@
 import 'package:flutter/material.dart';
-import 'home_screen.dart';
+import 'package:http/http.dart' as http;
+import 'dart:convert';
 import 'calender.dart';
 
-class LoginScreen extends StatelessWidget {
+class LoginScreen extends StatefulWidget {
+  @override
+  _LoginScreenState createState() => _LoginScreenState();
+}
+
+class _LoginScreenState extends State<LoginScreen> {
+  final TextEditingController usernameController = TextEditingController();
+  final TextEditingController passwordController = TextEditingController();
+  bool _isLoading = false;
+
+  Future<void> _login() async {
+    setState(() {
+      _isLoading = true;
+    });
+
+    final response = await http.post(
+      Uri.parse('http://localhost:3000/login'), // Use your actual API URL
+      headers: <String, String>{
+        'Content-Type': 'application/json; charset=UTF-8',
+      },
+      body: jsonEncode(<String, String>{
+        'username': usernameController.text,
+        'password': passwordController.text,
+      }),
+    );
+    setState(() {
+      _isLoading = false;
+    });
+    if (response.statusCode == 200) {
+      var responseData = jsonDecode(response.body);
+      if (responseData['status'] == 'success') {
+        String authKey = responseData['auth_key'];
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => CalendarScreen(authKey: authKey),
+          ),
+        );
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(responseData['message'])),
+        );
+      }
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Login failed: ${response.reasonPhrase}')),
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -26,7 +76,7 @@ class LoginScreen extends StatelessWidget {
             top: 40,
             left: 16,
             child: IconButton(
-              icon: Icon(Icons.arrow_back, color: Colors.white),
+              icon: const Icon(Icons.arrow_back, color: Colors.white),
               onPressed: () {
                 Navigator.pop(context);
               },
@@ -36,7 +86,7 @@ class LoginScreen extends StatelessWidget {
           Positioned(
             top: MediaQuery.of(context).size.height * 0.20,
             left: 16.0,
-            child: Text(
+            child: const Text(
               'WELCOME',
               style: TextStyle(
                 color: Colors.white,
@@ -49,7 +99,7 @@ class LoginScreen extends StatelessWidget {
           Positioned(
             top: MediaQuery.of(context).size.height * 0.30,
             left: 16.0,
-            child: Text(
+            child: const Text(
               'Log in to continue',
               style: TextStyle(
                 color: Colors.white,
@@ -65,7 +115,7 @@ class LoginScreen extends StatelessWidget {
             right: 0,
             bottom: 0,
             child: Container(
-              decoration: BoxDecoration(
+              decoration: const BoxDecoration(
                 color: Colors.white,
               ),
               child: SingleChildScrollView(
@@ -73,70 +123,70 @@ class LoginScreen extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                    SizedBox(height: 40),
+                    const SizedBox(height: 40),
                     TextField(
-                      decoration: InputDecoration(
-                        labelText: 'Email',
+                      controller: usernameController,
+                      decoration: const InputDecoration(
+                        labelText: 'Username',
                         labelStyle: TextStyle(
                           color: Color.fromRGBO(24, 54, 65, 1),
                         ),
                         border: OutlineInputBorder(),
                       ),
-                      style: TextStyle(
+                      style: const TextStyle(
                         color: Color.fromRGBO(24, 54, 65, 1),
                       ),
                     ),
-                    SizedBox(height: 40),
+                    const SizedBox(height: 40),
                     TextField(
+                      controller: passwordController,
                       decoration: InputDecoration(
                         labelText: 'Password',
-                        labelStyle: TextStyle(
+                        labelStyle: const TextStyle(
                           color: Color.fromRGBO(24, 54, 65, 1),
                         ),
-                        border: OutlineInputBorder(),
+                        border: const OutlineInputBorder(),
                         suffixIcon: IconButton(
-                          icon: Icon(Icons.visibility_off),
+                          icon: const Icon(Icons.visibility_off),
                           onPressed: () {
                             // Implement toggle password visibility
                           },
                         ),
                       ),
                       obscureText: true,
-                      style: TextStyle(
+                      style: const TextStyle(
                         color: Color.fromRGBO(24, 54, 65, 1),
                       ),
                     ),
-                    SizedBox(height: 34),
+                    const SizedBox(height: 34),
                     ElevatedButton(
-                      onPressed: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                              builder: (context) => CalendarScreen()),
-                        );
-                      },
-                      child: Text('Log in'),
+                      onPressed: _isLoading ? null : _login,
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.white,
-                        foregroundColor: Color.fromRGBO(24, 54, 65, 1),
-                        padding: EdgeInsets.symmetric(vertical: 16),
+                        backgroundColor: const Color.fromRGBO(24, 54, 65, 1),
+                        foregroundColor: Colors.white,
+                        padding: const EdgeInsets.symmetric(vertical: 16),
                         elevation: 10,
                         shadowColor: Colors.black,
-                        textStyle: TextStyle(
-                          color: Color.fromRGBO(24, 54, 65, 1),
+                        textStyle: const TextStyle(
                           fontSize: 18,
                           fontWeight: FontWeight.bold,
                         ),
                       ),
+                      child: _isLoading
+                          ? const CircularProgressIndicator(
+                              valueColor: AlwaysStoppedAnimation<Color>(
+                                  Color.fromRGBO(24, 54, 65, 1)),
+                            )
+                          : const Text('Log in'),
                     ),
-                    SizedBox(height: 20),
+                    const SizedBox(height: 20),
                     Align(
                       alignment: Alignment.bottomRight,
                       child: TextButton(
                         onPressed: () {
                           // Implement your forgot password logic here
                         },
-                        child: Text(
+                        child: const Text(
                           'Forgot password',
                           style: TextStyle(
                             color: Color.fromARGB(184, 0, 92, 3),

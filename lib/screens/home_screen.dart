@@ -28,12 +28,12 @@ class _HomeScreenState extends State<HomeScreen> {
           ),
           // Content on top of the background
           Padding(
-            padding: EdgeInsets.symmetric(horizontal: 16.0),
+            padding: const EdgeInsets.symmetric(horizontal: 16.0),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 SizedBox(height: MediaQuery.of(context).size.height * 0.15),
-                Text(
+                const Text(
                   'WELCOME',
                   style: TextStyle(
                     color: Colors.white,
@@ -42,8 +42,8 @@ class _HomeScreenState extends State<HomeScreen> {
                     fontStyle: FontStyle.italic,
                   ),
                 ),
-                SizedBox(height: 10),
-                Text(
+                const SizedBox(height: 10),
+                const Text(
                   'ALL YOUR HOTEL NEEDS END HERE',
                   style: TextStyle(
                     color: Colors.white,
@@ -51,7 +51,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     fontWeight: FontWeight.w600,
                   ),
                 ),
-                Spacer(),
+                const Spacer(),
                 Align(
                   alignment: Alignment.bottomCenter,
                   child: GestureDetector(
@@ -72,7 +72,7 @@ class _HomeScreenState extends State<HomeScreen> {
                       });
                     },
                     child: AnimatedContainer(
-                      duration: Duration(milliseconds: 200),
+                      duration: const Duration(milliseconds: 200),
                       curve: Curves.easeInOut,
                       margin: EdgeInsets.only(
                           bottom: MediaQuery.of(context).size.height * 0.20),
@@ -87,12 +87,12 @@ class _HomeScreenState extends State<HomeScreen> {
                           if (_isPressed)
                             BoxShadow(
                               color: Colors.black.withOpacity(0.5),
-                              offset: Offset(0, 8),
+                              offset: const Offset(0, 8),
                               blurRadius: 15,
                             ),
                         ],
                       ),
-                      child: Center(
+                      child: const Center(
                         child: Text(
                           'Log in',
                           style: TextStyle(
