@@ -54,111 +54,136 @@ class _CalendarScreenState extends State<CalendarScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: Text('Calendar'),
-      ),
-      body: Column(
+      body: Stack(
         children: [
-          TableCalendar(
-            firstDay: DateTime.utc(2020, 1, 1),
-            lastDay: DateTime.utc(2030, 12, 31),
-            focusedDay: _focusedDay,
-            calendarFormat: _calendarFormat,
-            selectedDayPredicate: (day) {
-              return isSameDay(_selectedDay, day);
-            },
-            onDaySelected: (selectedDay, focusedDay) {
-              if (!isSameDay(_selectedDay, selectedDay)) {
-                setState(() {
-                  _selectedDay = selectedDay;
-                  _focusedDay = focusedDay;
-                  _selectedEvents = _getEventsForDay(selectedDay);
-                });
-              }
-            },
-            onFormatChanged: (format) {
-              if (_calendarFormat != format) {
-                setState(() {
-                  _calendarFormat = format;
-                });
-              }
-            },
-            onPageChanged: (focusedDay) {
-              _focusedDay = focusedDay;
-            },
-            eventLoader: _getEventsForDay,
-            calendarBuilders: CalendarBuilders(
-              markerBuilder: (context, date, events) {
-                if (events.isNotEmpty) {
-                  return Positioned(
-                    right: 1,
-                    bottom: 1,
-                    child: _buildEventsMarker(date, events),
-                  );
-                }
-              },
-              selectedBuilder: (context, date, events) => Container(
-                margin: const EdgeInsets.all(4.0),
-                alignment: Alignment.center,
-                decoration: BoxDecoration(
-                  color: Colors.blue,
-                  borderRadius: BorderRadius.circular(10.0),
-                ),
-                child: Text(
-                  '${date.day}',
-                  style: TextStyle(color: Colors.white),
-                ),
-              ),
-              todayBuilder: (context, date, events) => Container(
-                margin: const EdgeInsets.all(4.0),
-                alignment: Alignment.center,
-                decoration: BoxDecoration(
-                  color: Colors.orange,
-                  borderRadius: BorderRadius.circular(10.0),
-                ),
-                child: Text(
-                  '${date.day}',
-                  style: TextStyle(color: Colors.white),
-                ),
-              ),
-              defaultBuilder: (context, date, events) => Container(
-                margin: const EdgeInsets.all(4.0),
-                alignment: Alignment.center,
-                decoration: BoxDecoration(
-                  color: _events.containsKey(date)
-                      ? Colors.red
-                      : Colors.transparent,
-                  borderRadius: BorderRadius.circular(10.0),
-                ),
-                child: Text(
-                  '${date.day}',
-                  style: TextStyle(
-                    color:
-                        _events.containsKey(date) ? Colors.white : Colors.black,
-                  ),
-                ),
-              ),
+          Positioned.fill(
+            child: Image.asset(
+              'assets/images/recep.jpg',
+              fit: BoxFit.cover,
             ),
           ),
-          const SizedBox(height: 8.0),
-          Expanded(
-            child: ListView.builder(
-              itemCount: _selectedEvents.length,
-              itemBuilder: (context, index) {
-                return Container(
-                  margin: const EdgeInsets.symmetric(
-                    horizontal: 12.0,
-                    vertical: 4.0,
+          Center(
+            child: Container(
+              width: MediaQuery.of(context).size.width * 0.9, // Adjust width
+              height: MediaQuery.of(context).size.height * 0.5, // Adjust height
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(15.0),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black26,
+                    blurRadius: 10.0,
+                    offset: Offset(0, 4),
                   ),
-                  decoration: BoxDecoration(
-                    border: Border.all(),
-                    borderRadius: BorderRadius.circular(12.0),
+                ],
+              ),
+              child: Column(
+                children: [
+                  TableCalendar(
+                    firstDay: DateTime.utc(2020, 1, 1),
+                    lastDay: DateTime.utc(2030, 12, 31),
+                    focusedDay: _focusedDay,
+                    calendarFormat: _calendarFormat,
+                    selectedDayPredicate: (day) {
+                      return isSameDay(_selectedDay, day);
+                    },
+                    onDaySelected: (selectedDay, focusedDay) {
+                      if (!isSameDay(_selectedDay, selectedDay)) {
+                        setState(() {
+                          _selectedDay = selectedDay;
+                          _focusedDay = focusedDay;
+                          _selectedEvents = _getEventsForDay(selectedDay);
+                        });
+                      }
+                    },
+                    onFormatChanged: (format) {
+                      if (_calendarFormat != format) {
+                        setState(() {
+                          _calendarFormat = format;
+                        });
+                      }
+                    },
+                    onPageChanged: (focusedDay) {
+                      _focusedDay = focusedDay;
+                    },
+                    eventLoader: _getEventsForDay,
+                    calendarBuilders: CalendarBuilders(
+                      markerBuilder: (context, date, events) {
+                        if (events.isNotEmpty) {
+                          return Positioned(
+                            right: 1,
+                            bottom: 1,
+                            child: _buildEventsMarker(date, events),
+                          );
+                        }
+                      },
+                      selectedBuilder: (context, date, events) => Container(
+                        margin: const EdgeInsets.all(4.0),
+                        alignment: Alignment.center,
+                        decoration: BoxDecoration(
+                          color: Colors.blue,
+                          borderRadius: BorderRadius.circular(10.0),
+                        ),
+                        child: Text(
+                          '${date.day}',
+                          style: TextStyle(color: Colors.white),
+                        ),
+                      ),
+                      todayBuilder: (context, date, events) => Container(
+                        margin: const EdgeInsets.all(4.0),
+                        alignment: Alignment.center,
+                        decoration: BoxDecoration(
+                          color: Colors.orange,
+                          borderRadius: BorderRadius.circular(10.0),
+                        ),
+                        child: Text(
+                          '${date.day}',
+                          style: TextStyle(color: Colors.white),
+                        ),
+                      ),
+                      defaultBuilder: (context, date, events) => Container(
+                        margin: const EdgeInsets.all(4.0),
+                        alignment: Alignment.center,
+                        decoration: BoxDecoration(
+                          color: _events.containsKey(date)
+                              ? Colors.red
+                              : Colors.transparent,
+                          borderRadius: BorderRadius.circular(10.0),
+                        ),
+                        child: Text(
+                          '${date.day}',
+                          style: TextStyle(
+                            color: _events.containsKey(date)
+                                ? Colors.white
+                                : Colors.black,
+                          ),
+                        ),
+                      ),
+                    ),
                   ),
-                  child: ListTile(
-                    title: Text(_selectedEvents[index].toString()),
+                  const SizedBox(height: 8.0),
+                  Expanded(
+                    child: ListView.builder(
+                      itemCount: _selectedEvents.length,
+                      itemBuilder: (context, index) {
+                        return Container(
+                          margin: const EdgeInsets.symmetric(
+                            horizontal: 12.0,
+                            vertical: 4.0,
+                          ),
+                          decoration: BoxDecoration(
+                            border: Border.all(),
+                            borderRadius: BorderRadius.circular(12.0),
+                          ),
+                          child: ListTile(
+                            title: Text(_selectedEvents[index].toString()),
+                          ),
+                        );
+                      },
+                    ),
                   ),
-                );
-              },
+                ],
+              ),
             ),
           ),
         ],
