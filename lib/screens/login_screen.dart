@@ -35,10 +35,12 @@ class _LoginScreenState extends State<LoginScreen> {
       var responseData = jsonDecode(response.body);
       if (responseData['status'] == 'success') {
         String authKey = responseData['auth_key'];
+        int employeeId = responseData['employee_id'];
         Navigator.push(
           context,
           MaterialPageRoute(
-            builder: (context) => CalendarScreen(authKey: authKey),
+            builder: (context) =>
+                CalendarScreen(authKey: authKey, employeeId: employeeId),
           ),
         );
       } else {

@@ -110,19 +110,19 @@ app.post('/login', (req, res) => {
     res.send({
       status: 'success',
       auth_key: user.auth_key,
+      employee_id: user.id,
     });
   });
 });
 
-// Get unavailable dates for a user by username
-app.get('/unavailable_dates/:username', (req, res) => {
-  const { username } = req.params;
+// Get unavailable dates for a user by employee ID
+app.get('/unavailable_dates/:employee_id', (req, res) => {
+  const { employee_id } = req.params;
   db.query(`
-    SELECT employee_dates.available_date
+    SELECT available_date
     FROM employee_dates
-    JOIN employees ON employee_dates.employee_id = employees.id
-    WHERE employees.username = ?
-  `, [username], (err, results) => {
+    WHERE employee_id = ?
+  `, [employee_id], (err, results) => {
     if (err) {
       return res.status(500).send({
         status: 'error',

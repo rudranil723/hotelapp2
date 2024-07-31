@@ -1,221 +1,187 @@
 import 'package:flutter/material.dart';
+import 'package:table_calendar/table_calendar.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
-import 'package:table_calendar/table_calendar.dart';
 
 class CalendarScreen extends StatefulWidget {
   final String authKey;
+  final int employeeId;
 
-  CalendarScreen({required this.authKey});
+  CalendarScreen({required this.authKey, required this.employeeId});
 
   @override
   _CalendarScreenState createState() => _CalendarScreenState();
 }
 
 class _CalendarScreenState extends State<CalendarScreen> {
-  DateTime? _selectedDate;
-  Map<DateTime, List> _bookedDates = {};
+  late Map<DateTime, List<dynamic>> _events;
+  late List _selectedEvents;
+  CalendarFormat _calendarFormat = CalendarFormat.month;
+  DateTime _focusedDay = DateTime.now();
+  DateTime? _selectedDay;
 
-  Future<void> _checkAvailability() async {
-    if (_selectedDate == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Please select a date')),
-      );
-      return;
-    }
+  @override
+  void initState() {
+    super.initState();
+    _events = {};
+    _selectedEvents = [];
+    _fetchUnavailableDates();
+  }
 
-    final response = await http.get(
-      Uri.parse('http://localhost:3000/rooms'), // Use your actual API URL
-      headers: <String, String>{
-        'Content-Type': 'application/json; charset=UTF-8',
-        'Authorization': 'Bearer ${widget.authKey}',
-      },
-    );
+  Future<void> _fetchUnavailableDates() async {
+    final response = await http.get(Uri.parse(
+        'http://localhost:3000/unavailable_dates/${widget.employeeId}'));
 
     if (response.statusCode == 200) {
-      final List<dynamic> roomData = jsonDecode(response.body);
-
-      bool isAvailable = false;
-
-      for (var room in roomData) {
-        if (room['booked'] == 0) {
-          isAvailable = true;
-          break;
-        } else {
-          final bookedDatesResponse = await http.get(
-            Uri.parse(
-                'http://localhost:3000/booked_dates?room_id=${room['id']}'),
-            headers: <String, String>{
-              'Content-Type': 'application/json; charset=UTF-8',
-              'Authorization': 'Bearer ${widget.authKey}',
-            },
-          );
-
-          if (bookedDatesResponse.statusCode == 200) {
-            final List<dynamic> bookedDatesData =
-                jsonDecode(bookedDatesResponse.body);
-
-            _bookedDates.clear();
-            for (var date in bookedDatesData) {
-              DateTime checkInDate = DateTime.parse(date['check_in_date']);
-              DateTime checkOutDate = DateTime.parse(date['check_out_date']);
-              for (DateTime d = checkInDate;
-                  d.isBefore(checkOutDate) || d.isAtSameMomentAs(checkOutDate);
-                  d = d.add(Duration(days: 1))) {
-                if (_bookedDates[d] == null) {
-                  _bookedDates[d] = ['booked'];
-                } else {
-                  _bookedDates[d]?.add('booked');
-                }
-              }
-            }
-          }
-        }
-      }
-
+      List dates = jsonDecode(response.body);
       setState(() {
-        // Update the UI
+        _events = {
+          for (var date in dates)
+            DateTime.parse(date['available_date']): ['Unavailable']
+        };
       });
-
-      showDialog(
-        context: context,
-        builder: (BuildContext context) {
-          return AlertDialog(
-            title: Text('Room Availability'),
-            content: Text(isAvailable ? 'Available' : 'Unavailable'),
-            actions: <Widget>[
-              TextButton(
-                child: Text('OK'),
-                onPressed: () {
-                  Navigator.of(context).pop();
-                },
-              ),
-            ],
-          );
-        },
-      );
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-            content:
-                Text('Failed to load room data: ${response.reasonPhrase}')),
+        SnackBar(content: Text('Failed to load unavailable dates')),
       );
     }
+  }
+
+  List<dynamic> _getEventsForDay(DateTime day) {
+    return _events[day] ?? [];
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: Stack(
+      appBar: AppBar(
+        title: Text('Calendar'),
+      ),
+      body: Column(
         children: [
-          // Background image covering 60% of the screen with rounded bottom
-          Positioned(
-            top: 0,
-            left: 0,
-            right: 0,
-            child: ClipRRect(
-              borderRadius: const BorderRadius.only(
-                bottomLeft: Radius.circular(30),
-                bottomRight: Radius.circular(30),
+          TableCalendar(
+            firstDay: DateTime.utc(2020, 1, 1),
+            lastDay: DateTime.utc(2030, 12, 31),
+            focusedDay: _focusedDay,
+            calendarFormat: _calendarFormat,
+            selectedDayPredicate: (day) {
+              return isSameDay(_selectedDay, day);
+            },
+            onDaySelected: (selectedDay, focusedDay) {
+              if (!isSameDay(_selectedDay, selectedDay)) {
+                setState(() {
+                  _selectedDay = selectedDay;
+                  _focusedDay = focusedDay;
+                  _selectedEvents = _getEventsForDay(selectedDay);
+                });
+              }
+            },
+            onFormatChanged: (format) {
+              if (_calendarFormat != format) {
+                setState(() {
+                  _calendarFormat = format;
+                });
+              }
+            },
+            onPageChanged: (focusedDay) {
+              _focusedDay = focusedDay;
+            },
+            eventLoader: _getEventsForDay,
+            calendarBuilders: CalendarBuilders(
+              markerBuilder: (context, date, events) {
+                if (events.isNotEmpty) {
+                  return Positioned(
+                    right: 1,
+                    bottom: 1,
+                    child: _buildEventsMarker(date, events),
+                  );
+                }
+              },
+              selectedBuilder: (context, date, events) => Container(
+                margin: const EdgeInsets.all(4.0),
+                alignment: Alignment.center,
+                decoration: BoxDecoration(
+                  color: Colors.blue,
+                  borderRadius: BorderRadius.circular(10.0),
+                ),
+                child: Text(
+                  '${date.day}',
+                  style: TextStyle(color: Colors.white),
+                ),
               ),
-              child: Image.asset(
-                'assets/images/recep.jpg',
-                fit: BoxFit.cover,
-                height: MediaQuery.of(context).size.height * 0.7,
+              todayBuilder: (context, date, events) => Container(
+                margin: const EdgeInsets.all(4.0),
+                alignment: Alignment.center,
+                decoration: BoxDecoration(
+                  color: Colors.orange,
+                  borderRadius: BorderRadius.circular(10.0),
+                ),
+                child: Text(
+                  '${date.day}',
+                  style: TextStyle(color: Colors.white),
+                ),
+              ),
+              defaultBuilder: (context, date, events) => Container(
+                margin: const EdgeInsets.all(4.0),
+                alignment: Alignment.center,
+                decoration: BoxDecoration(
+                  color: _events.containsKey(date)
+                      ? Colors.red
+                      : Colors.transparent,
+                  borderRadius: BorderRadius.circular(10.0),
+                ),
+                child: Text(
+                  '${date.day}',
+                  style: TextStyle(
+                    color:
+                        _events.containsKey(date) ? Colors.white : Colors.black,
+                  ),
+                ),
               ),
             ),
           ),
-          // Back button
-          Positioned(
-            top: 16,
-            left: 16,
-            child: IconButton(
-              icon: const Icon(Icons.arrow_back, color: Colors.white, size: 28),
-              onPressed: () {
-                Navigator.pop(context);
+          const SizedBox(height: 8.0),
+          Expanded(
+            child: ListView.builder(
+              itemCount: _selectedEvents.length,
+              itemBuilder: (context, index) {
+                return Container(
+                  margin: const EdgeInsets.symmetric(
+                    horizontal: 12.0,
+                    vertical: 4.0,
+                  ),
+                  decoration: BoxDecoration(
+                    border: Border.all(),
+                    borderRadius: BorderRadius.circular(12.0),
+                  ),
+                  child: ListTile(
+                    title: Text(_selectedEvents[index].toString()),
+                  ),
+                );
               },
             ),
           ),
-          // Content below the image
-          Align(
-            alignment: Alignment.bottomCenter,
-            child: Container(
-              margin: EdgeInsets.only(
-                top: MediaQuery.of(context).size.height * 0.20,
-                left: MediaQuery.of(context).size.width * 0.05,
-                right: MediaQuery.of(context).size.width * 0.05,
-                bottom: MediaQuery.of(context).size.height * 0.07,
-              ),
-              padding: const EdgeInsets.all(16.0),
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(16.0),
-                boxShadow: const [
-                  BoxShadow(
-                    color: Colors.black26,
-                    blurRadius: 10.0,
-                    offset: Offset(0, 5),
-                  ),
-                ],
-              ),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  // Calendar view
-                  TableCalendar(
-                    focusedDay: DateTime.now(),
-                    firstDay: DateTime(2000),
-                    lastDay: DateTime(2100),
-                    calendarFormat: CalendarFormat.month,
-                    selectedDayPredicate: (day) {
-                      return isSameDay(_selectedDate, day);
-                    },
-                    onDaySelected: (selectedDay, focusedDay) {
-                      setState(() {
-                        _selectedDate = selectedDay;
-                      });
-                    },
-                    eventLoader: (day) {
-                      return _bookedDates[day] ?? [];
-                    },
-                    calendarStyle: CalendarStyle(
-                      todayDecoration: BoxDecoration(
-                        color: Colors.orange,
-                        shape: BoxShape.circle,
-                      ),
-                      markerDecoration: BoxDecoration(
-                        color: Colors.red,
-                        shape: BoxShape.circle,
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 16),
-                  // Submit button with updated styles
-                  SizedBox(
-                    width: double.infinity,
-                    child: ElevatedButton(
-                      onPressed: _checkAvailability,
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: const Color.fromRGBO(24, 54, 65, 1),
-                        padding: const EdgeInsets.symmetric(vertical: 16),
-                        textStyle: const TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.bold,
-                        ),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12.0),
-                        ),
-                        elevation: 10,
-                      ),
-                      child: const Text('Submit',
-                          style: TextStyle(color: Colors.white)),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ),
         ],
+      ),
+    );
+  }
+
+  Widget _buildEventsMarker(DateTime date, List events) {
+    return Container(
+      decoration: BoxDecoration(
+        shape: BoxShape.circle,
+        color: Colors.red,
+      ),
+      width: 16.0,
+      height: 16.0,
+      child: Center(
+        child: Text(
+          '${events.length}',
+          style: TextStyle().copyWith(
+            color: Colors.white,
+            fontSize: 12.0,
+          ),
+        ),
       ),
     );
   }
