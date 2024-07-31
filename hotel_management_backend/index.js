@@ -2,7 +2,6 @@ const express = require('express');
 const mysql = require('mysql2');
 const bodyParser = require('body-parser');
 const cors = require('cors');
-const bcrypt = require('bcrypt');
 
 const app = express();
 app.use(bodyParser.json());
@@ -50,8 +49,7 @@ app.get('/rooms', (req, res) => {
 // Add a new employee
 app.post('/employees', (req, res) => {
   const { username, password, auth_key } = req.body;
-  const hashedPassword = bcrypt.hashSync(password, 10);
-  db.query('INSERT INTO employees SET ?', { username, password: hashedPassword, auth_key }, (err, results) => {
+  db.query('INSERT INTO employees SET ?', { username, password, auth_key }, (err, results) => {
     if (err) {
       return res.status(500).send(err);
     }
@@ -86,7 +84,7 @@ app.put('/rooms/:id', (req, res) => {
   );
 });
 
-//Login endpoint
+// Login endpoint
 app.post('/login', (req, res) => {
   const { username, password } = req.body;
   db.query('SELECT * FROM employees WHERE username = ?', [username], (err, results) => {
@@ -103,7 +101,6 @@ app.post('/login', (req, res) => {
       });
     }
     const user = results[0];
-    // const isPasswordValid = bcrypt.compareSync(password, user.password);
     if (password != user.password) {
       return res.status(401).send({
         status: 'error',
@@ -117,7 +114,24 @@ app.post('/login', (req, res) => {
   });
 });
 
-
+// Get unavailable dates for a user by username
+app.get('/unavailable_dates/:username', (req, res) => {
+  const { username } = req.params;
+  db.query(`
+    SELECT employee_dates.available_date
+    FROM employee_dates
+    JOIN employees ON employee_dates.employee_id = employees.id
+    WHERE employees.username = ?
+  `, [username], (err, results) => {
+    if (err) {
+      return res.status(500).send({
+        status: 'error',
+        message: 'Database query error',
+      });
+    }
+    res.send(results);
+  });
+});
 
 // Start the server
 const PORT = 3000;

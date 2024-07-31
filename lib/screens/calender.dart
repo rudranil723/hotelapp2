@@ -13,10 +13,17 @@ class CalendarScreen extends StatefulWidget {
 }
 
 class _CalendarScreenState extends State<CalendarScreen> {
-  final TextEditingController roomNumberController = TextEditingController();
+  DateTime? _selectedDate;
   Map<DateTime, List> _bookedDates = {};
 
   Future<void> _checkAvailability() async {
+    if (_selectedDate == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Please select a date')),
+      );
+      return;
+    }
+
     final response = await http.get(
       Uri.parse('http://localhost:3000/rooms'), // Use your actual API URL
       headers: <String, String>{
@@ -31,41 +38,38 @@ class _CalendarScreenState extends State<CalendarScreen> {
       bool isAvailable = false;
 
       for (var room in roomData) {
-        if (room['room_number'] == int.parse(roomNumberController.text)) {
-          isAvailable = room['booked'] == 0;
+        if (room['booked'] == 0) {
+          isAvailable = true;
+          break;
+        } else {
+          final bookedDatesResponse = await http.get(
+            Uri.parse(
+                'http://localhost:3000/booked_dates?room_id=${room['id']}'),
+            headers: <String, String>{
+              'Content-Type': 'application/json; charset=UTF-8',
+              'Authorization': 'Bearer ${widget.authKey}',
+            },
+          );
 
-          if (!isAvailable) {
-            final bookedDatesResponse = await http.get(
-              Uri.parse(
-                  'http://localhost:3000/booked_dates?room_id=${room['id']}'),
-              headers: <String, String>{
-                'Content-Type': 'application/json; charset=UTF-8',
-                'Authorization': 'Bearer ${widget.authKey}',
-              },
-            );
+          if (bookedDatesResponse.statusCode == 200) {
+            final List<dynamic> bookedDatesData =
+                jsonDecode(bookedDatesResponse.body);
 
-            if (bookedDatesResponse.statusCode == 200) {
-              final List<dynamic> bookedDatesData =
-                  jsonDecode(bookedDatesResponse.body);
-
-              _bookedDates.clear();
-              for (var date in bookedDatesData) {
-                DateTime checkInDate = DateTime.parse(date['check_in_date']);
-                DateTime checkOutDate = DateTime.parse(date['check_out_date']);
-                for (DateTime d = checkInDate;
-                    d.isBefore(checkOutDate) ||
-                        d.isAtSameMomentAs(checkOutDate);
-                    d = d.add(Duration(days: 1))) {
-                  if (_bookedDates[d] == null) {
-                    _bookedDates[d] = ['booked'];
-                  } else {
-                    _bookedDates[d]?.add('booked');
-                  }
+            _bookedDates.clear();
+            for (var date in bookedDatesData) {
+              DateTime checkInDate = DateTime.parse(date['check_in_date']);
+              DateTime checkOutDate = DateTime.parse(date['check_out_date']);
+              for (DateTime d = checkInDate;
+                  d.isBefore(checkOutDate) || d.isAtSameMomentAs(checkOutDate);
+                  d = d.add(Duration(days: 1))) {
+                if (_bookedDates[d] == null) {
+                  _bookedDates[d] = ['booked'];
+                } else {
+                  _bookedDates[d]?.add('booked');
                 }
               }
             }
           }
-          break;
         }
       }
 
@@ -157,16 +161,36 @@ class _CalendarScreenState extends State<CalendarScreen> {
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  // Room number entry box
-                  TextField(
-                    controller: roomNumberController,
-                    decoration: const InputDecoration(
-                      labelText: 'Room Number',
-                      border: OutlineInputBorder(),
+                  // Calendar view
+                  TableCalendar(
+                    focusedDay: DateTime.now(),
+                    firstDay: DateTime(2000),
+                    lastDay: DateTime(2100),
+                    calendarFormat: CalendarFormat.month,
+                    selectedDayPredicate: (day) {
+                      return isSameDay(_selectedDate, day);
+                    },
+                    onDaySelected: (selectedDay, focusedDay) {
+                      setState(() {
+                        _selectedDate = selectedDay;
+                      });
+                    },
+                    eventLoader: (day) {
+                      return _bookedDates[day] ?? [];
+                    },
+                    calendarStyle: CalendarStyle(
+                      todayDecoration: BoxDecoration(
+                        color: Colors.orange,
+                        shape: BoxShape.circle,
+                      ),
+                      markerDecoration: BoxDecoration(
+                        color: Colors.red,
+                        shape: BoxShape.circle,
+                      ),
                     ),
                   ),
                   const SizedBox(height: 16),
-                  // Check button with updated styles
+                  // Submit button with updated styles
                   SizedBox(
                     width: double.infinity,
                     child: ElevatedButton(
@@ -183,29 +207,8 @@ class _CalendarScreenState extends State<CalendarScreen> {
                         ),
                         elevation: 10,
                       ),
-                      child: const Text('Check',
+                      child: const Text('Submit',
                           style: TextStyle(color: Colors.white)),
-                    ),
-                  ),
-                  const SizedBox(height: 32),
-                  // Calendar view
-                  TableCalendar(
-                    focusedDay: DateTime.now(),
-                    firstDay: DateTime(2000),
-                    lastDay: DateTime(2100),
-                    calendarFormat: CalendarFormat.month,
-                    eventLoader: (day) {
-                      return _bookedDates[day] ?? [];
-                    },
-                    calendarStyle: CalendarStyle(
-                      todayDecoration: BoxDecoration(
-                        color: Colors.orange,
-                        shape: BoxShape.circle,
-                      ),
-                      markerDecoration: BoxDecoration(
-                        color: Colors.red,
-                        shape: BoxShape.circle,
-                      ),
                     ),
                   ),
                 ],
