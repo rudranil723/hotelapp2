@@ -1,3 +1,5 @@
+require('dotenv').config();
+
 const express = require('express');
 const mysql = require('mysql2');
 const bodyParser = require('body-parser');
@@ -7,7 +9,6 @@ const app = express();
 app.use(bodyParser.json());
 app.use(cors());
 
-// Create a connection to the database
 const db = mysql.createConnection({
   host: process.env.DB_HOST,
   user: process.env.DB_USER,
@@ -15,7 +16,6 @@ const db = mysql.createConnection({
   database: process.env.DB_NAME
 });
 
-// Connect to the database
 db.connect(err => {
   if (err) {
     console.error('Error connecting to the database:', err);
@@ -24,9 +24,6 @@ db.connect(err => {
   console.log('Connected to the database.');
 });
 
-// Define API endpoints
-
-// Get all employees
 app.get('/employees', (req, res) => {
   db.query('SELECT * FROM employees', (err, results) => {
     if (err) {
@@ -36,7 +33,6 @@ app.get('/employees', (req, res) => {
   });
 });
 
-// Get all rooms
 app.get('/rooms', (req, res) => {
   db.query('SELECT * FROM rooms', (err, results) => {
     if (err) {
@@ -46,7 +42,6 @@ app.get('/rooms', (req, res) => {
   });
 });
 
-// Add a new employee
 app.post('/employees', (req, res) => {
   const { username, password, auth_key } = req.body;
   db.query('INSERT INTO employees SET ?', { username, password, auth_key }, (err, results) => {
@@ -57,7 +52,6 @@ app.post('/employees', (req, res) => {
   });
 });
 
-// Add a new room
 app.post('/rooms', (req, res) => {
   const { room_number } = req.body;
   db.query('INSERT INTO rooms SET ?', { room_number }, (err, results) => {
@@ -68,7 +62,6 @@ app.post('/rooms', (req, res) => {
   });
 });
 
-// Update room booking status
 app.put('/rooms/:id', (req, res) => {
   const { id } = req.params;
   const { check_in_date, check_out_date, booked } = req.body;
@@ -84,7 +77,6 @@ app.put('/rooms/:id', (req, res) => {
   );
 });
 
-// Login endpoint
 app.post('/login', (req, res) => {
   const { username, password } = req.body;
   db.query('SELECT * FROM employees WHERE username = ?', [username], (err, results) => {
@@ -115,7 +107,6 @@ app.post('/login', (req, res) => {
   });
 });
 
-// Get unavailable dates for a user by employee ID
 app.get('/unavailable_dates/:employee_id', (req, res) => {
   const { employee_id } = req.params;
   db.query(`
@@ -133,7 +124,6 @@ app.get('/unavailable_dates/:employee_id', (req, res) => {
   });
 });
 
-// Start the server
 const PORT = 3000;
 app.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}`);
