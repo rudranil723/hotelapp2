@@ -1,7 +1,7 @@
-require('dotenv').config();
+require('dotenv').config();  // Ensure dotenv is required at the top of your file
 
 const express = require('express');
-const mysql = require('mysql2');
+const { Client } = require('pg');
 const bodyParser = require('body-parser');
 const cors = require('cors');
 
@@ -9,11 +9,11 @@ const app = express();
 app.use(bodyParser.json());
 app.use(cors());
 
-const db = mysql.createConnection({
-  host: process.env.DB_HOST,
-  user: process.env.DB_USER,
-  password: process.env.DB_PASSWORD,
-  database: process.env.DB_NAME
+const db = new Client({
+  connectionString: process.env.DATABASE_URL,  // Use the DATABASE_URL from the .env file
+  ssl: {
+    rejectUnauthorized: false,
+  },
 });
 
 db.connect(err => {
@@ -29,7 +29,7 @@ app.get('/employees', (req, res) => {
     if (err) {
       return res.status(500).send(err);
     }
-    res.json(results);
+    res.json(results.rows);
   });
 });
 
@@ -38,35 +38,43 @@ app.get('/rooms', (req, res) => {
     if (err) {
       return res.status(500).send(err);
     }
-    res.json(results);
+    res.json(results.rows);
   });
 });
 
 app.post('/employees', (req, res) => {
   const { username, password, auth_key } = req.body;
-  db.query('INSERT INTO employees SET ?', { username, password, auth_key }, (err, results) => {
-    if (err) {
-      return res.status(500).send(err);
+  db.query(
+    'INSERT INTO employees (username, password, auth_key) VALUES ($1, $2, $3)',
+    [username, password, auth_key],
+    (err, results) => {
+      if (err) {
+        return res.status(500).send(err);
+      }
+      res.status(201).send(results);
     }
-    res.status(201).send(results);
-  });
+  );
 });
 
 app.post('/rooms', (req, res) => {
   const { room_number } = req.body;
-  db.query('INSERT INTO rooms SET ?', { room_number }, (err, results) => {
-    if (err) {
-      return res.status(500).send(err);
+  db.query(
+    'INSERT INTO rooms (room_number) VALUES ($1)',
+    [room_number],
+    (err, results) => {
+      if (err) {
+        return res.status(500).send(err);
+      }
+      res.status(201).send(results);
     }
-    res.status(201).send(results);
-  });
+  );
 });
 
 app.put('/rooms/:id', (req, res) => {
   const { id } = req.params;
   const { check_in_date, check_out_date, booked } = req.body;
   db.query(
-    'UPDATE rooms SET check_in_date = ?, check_out_date = ?, booked = ? WHERE id = ?',
+    'UPDATE rooms SET check_in_date = $1, check_out_date = $2, booked = $3 WHERE id = $4',
     [check_in_date, check_out_date, booked, id],
     (err, results) => {
       if (err) {
@@ -79,21 +87,21 @@ app.put('/rooms/:id', (req, res) => {
 
 app.post('/login', (req, res) => {
   const { username, password } = req.body;
-  db.query('SELECT * FROM employees WHERE username = ?', [username], (err, results) => {
+  db.query('SELECT * FROM employees WHERE username = $1', [username], (err, results) => {
     if (err) {
       return res.status(500).send({
         status: 'error',
         message: 'Database query error',
       });
     }
-    if (results.length === 0) {
+    if (results.rows.length === 0) {
       return res.status(401).send({
         status: 'error',
         message: 'Invalid credentials',
       });
     }
-    const user = results[0];
-    if (password != user.password) {
+    const user = results.rows[0];
+    if (password !== user.password) {
       return res.status(401).send({
         status: 'error',
         message: 'Invalid credentials',
@@ -109,18 +117,14 @@ app.post('/login', (req, res) => {
 
 app.get('/unavailable_dates/:employee_id', (req, res) => {
   const { employee_id } = req.params;
-  db.query(`
-    SELECT available_date
-    FROM employee_dates
-    WHERE employee_id = ?
-  `, [employee_id], (err, results) => {
+  db.query('SELECT available_date FROM employee_dates WHERE employee_id = $1', [employee_id], (err, results) => {
     if (err) {
       return res.status(500).send({
         status: 'error',
         message: 'Database query error',
       });
     }
-    res.send(results);
+    res.send(results.rows);
   });
 });
 
