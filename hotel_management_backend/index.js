@@ -133,13 +133,30 @@
 //   console.log(`Server is running on port ${PORT}`);
 // });
 
-require('dotenv').config(); // Ensure this is at the top
+// require('dotenv').config(); // Ensure this is at the top
+
+// const { Client } = require('pg');
+
+// // Log the database URL to verify it's loaded correctly
+// console.log('Database URL:', process.env.DATABASE_URL);
+
+// const client = new Client({
+//   connectionString: process.env.DATABASE_URL,
+//   ssl: {
+//     rejectUnauthorized: false
+//   }
+// });
+
+// client.connect()
+//   .then(() => console.log('Connected to the database.'))
+//   .catch(err => console.error('Error connecting to the database:', err));
+
+
+require('dotenv').config();  // Ensure dotenv is required to load environment variables
 
 const { Client } = require('pg');
 
-// Log the database URL to verify it's loaded correctly
-console.log('Database URL:', process.env.DATABASE_URL);
-
+// Create a new Client instance with the connection string
 const client = new Client({
   connectionString: process.env.DATABASE_URL,
   ssl: {
@@ -147,6 +164,21 @@ const client = new Client({
   }
 });
 
-client.connect()
-  .then(() => console.log('Connected to the database.'))
-  .catch(err => console.error('Error connecting to the database:', err));
+(async () => {
+  try {
+    // Connect to the database
+    await client.connect();
+    console.log('Connected to the database.');
+
+    // Execute a test query
+    const results = await client.query('SELECT NOW()');
+    console.log('Current time from database:', results.rows[0]);
+
+  } catch (err) {
+    // Handle and log errors
+    console.error('Error executing query:', err);
+  } finally {
+    // Ensure client is properly closed
+    await client.end();
+  }
+})();
