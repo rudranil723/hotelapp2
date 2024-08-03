@@ -224,12 +224,133 @@
 
 
 
+// const express = require('express');
+// const { Client } = require('pg');
+// require('dotenv').config();
+
+// const app = express();
+// const PORT = process.env.PORT || 3000; // Use PORT environment variable
+
+// const client = new Client({
+//   connectionString: process.env.DATABASE_URL,
+//   ssl: {
+//     rejectUnauthorized: false
+//   }
+// });
+
+// // Middleware
+// app.use(express.json()); // To parse JSON bodies
+
+// // Connect to the database
+// client.connect()
+//   .then(() => console.log('Connected to the database.'))
+//   .catch(err => console.error('Error connecting to the database:', err));
+
+// // Route to handle login
+// app.post('/login', async (req, res) => {
+//   const { username, password } = req.body;
+
+//   try {
+//     const result = await client.query('SELECT * FROM employees WHERE username = $1', [username]);
+//     if (result.rows.length === 0) {
+//       return res.status(401).json({ status: 'error', message: 'Invalid credentials' });
+//     }
+
+//     const user = result.rows[0];
+//     if (password !== user.password) {
+//       return res.status(401).json({ status: 'error', message: 'Invalid credentials' });
+//     }
+
+//     res.json({ status: 'success', auth_key: user.auth_key, employee_id: user.id });
+//   } catch (err) {
+//     console.error('Error executing query:', err);
+//     res.status(500).json({ status: 'error', message: 'Database query error' });
+//   }
+// });
+
+// // Route to get unavailable dates for a specific employee
+// app.get('/unavailable_dates/:employee_id', async (req, res) => {
+//   const { employee_id } = req.params;
+
+//   try {
+//     const result = await client.query('SELECT available_date FROM employee_dates WHERE employee_id = $1', [employee_id]);
+//     res.json(result.rows);
+//   } catch (err) {
+//     console.error('Error executing query:', err);
+//     res.status(500).json({ status: 'error', message: 'Database query error' });
+//   }
+// });
+
+// // Start the server
+// app.listen(PORT, () => {
+//   console.log(`Server is running on port ${PORT}`);
+// });
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 const express = require('express');
 const { Client } = require('pg');
 require('dotenv').config();
 
 const app = express();
-const PORT = process.env.PORT || 3000; // Use PORT environment variable
+const PORT = process.env.PORT || 3000;
 
 const client = new Client({
   connectionString: process.env.DATABASE_URL,
@@ -238,50 +359,33 @@ const client = new Client({
   }
 });
 
-// Middleware
-app.use(express.json()); // To parse JSON bodies
-
-// Connect to the database
 client.connect()
   .then(() => console.log('Connected to the database.'))
   .catch(err => console.error('Error connecting to the database:', err));
 
-// Route to handle login
+app.use(express.json());
+
 app.post('/login', async (req, res) => {
   const { username, password } = req.body;
-
   try {
     const result = await client.query('SELECT * FROM employees WHERE username = $1', [username]);
     if (result.rows.length === 0) {
       return res.status(401).json({ status: 'error', message: 'Invalid credentials' });
     }
-
     const user = result.rows[0];
     if (password !== user.password) {
       return res.status(401).json({ status: 'error', message: 'Invalid credentials' });
     }
-
-    res.json({ status: 'success', auth_key: user.auth_key, employee_id: user.id });
+    res.json({
+      status: 'success',
+      auth_key: user.auth_key,
+      employee_id: user.id,
+    });
   } catch (err) {
-    console.error('Error executing query:', err);
     res.status(500).json({ status: 'error', message: 'Database query error' });
   }
 });
 
-// Route to get unavailable dates for a specific employee
-app.get('/unavailable_dates/:employee_id', async (req, res) => {
-  const { employee_id } = req.params;
-
-  try {
-    const result = await client.query('SELECT available_date FROM employee_dates WHERE employee_id = $1', [employee_id]);
-    res.json(result.rows);
-  } catch (err) {
-    console.error('Error executing query:', err);
-    res.status(500).json({ status: 'error', message: 'Database query error' });
-  }
-});
-
-// Start the server
 app.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}`);
 });
