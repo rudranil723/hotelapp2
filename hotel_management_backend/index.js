@@ -133,6 +133,26 @@
 //   console.log(`Server is running on port ${PORT}`);
 // });
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 // require('dotenv').config(); // Ensure this is at the top
 
 // const { Client } = require('pg');
@@ -152,11 +172,43 @@
 //   .catch(err => console.error('Error connecting to the database:', err));
 
 
-require('dotenv').config();  // Ensure dotenv is required to load environment variables
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+const express = require('express');
 const { Client } = require('pg');
+require('dotenv').config();
 
-// Create a new Client instance with the connection string
+const app = express();
+const PORT = process.env.PORT || 3000; // Use PORT environment variable
+
 const client = new Client({
   connectionString: process.env.DATABASE_URL,
   ssl: {
@@ -164,21 +216,13 @@ const client = new Client({
   }
 });
 
-(async () => {
-  try {
-    // Connect to the database
-    await client.connect();
-    console.log('Connected to the database.');
+client.connect()
+  .then(() => console.log('Connected to the database.'))
+  .catch(err => console.error('Error connecting to the database:', err));
 
-    // Execute a test query
-    const results = await client.query('SELECT NOW()');
-    console.log('Current time from database:', results.rows[0]);
+// Define your routes here
 
-  } catch (err) {
-    // Handle and log errors
-    console.error('Error executing query:', err);
-  } finally {
-    // Ensure client is properly closed
-    await client.end();
-  }
-})();
+app.listen(PORT, () => {
+  console.log(`Server is running on port ${PORT}`);
+});
+
